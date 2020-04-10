@@ -44,6 +44,28 @@
       "sort": 30, 
       "tags": "lib,python-package,tensorflow"
     }, 
+    "lib-python-networkx": {
+      "local": "yes", 
+      "name": "Python NetworkX library", 
+      "version_from": [
+        1,
+        11,
+        0
+      ],
+      "sort": 20, 
+      "tags": "lib,python-package,networkx"
+    }, 
+    "lib-python-defusedxml": {
+      "local": "yes", 
+      "name": "Python defusedxml library", 
+      "version_from": [
+        0,
+        5,
+        0
+      ],
+      "sort": 20, 
+      "tags": "lib,python-package,defusedxml"
+    }, 
     "model-source": {
       "local": "yes", 
       "name": "Original TensorFlow model", 
