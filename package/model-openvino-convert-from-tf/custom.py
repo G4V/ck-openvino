@@ -22,18 +22,18 @@ models:
         tf_model: %(tf_model)s
         adapter: classification
         mo_params:
-          data_type: FP32 (or FP16)
+          data_type: FP32
           input_shape: (%(batch_size)d, %(height)d, %(width)d, %(channels)d)
           output: %(output)s
         cpu_extensions: AUTO
     datasets:
       - name: ImageNet2012_bkgr
         data_source: %(data_source)s
-        annotation: </path/to/mlperf_list_1/imagenet.pickle>
-        dataset_meta: </path/to/mlperf_list_1/imagenet.json>
+        annotation: %(install_path)s/imagenet.pickle
+        dataset_meta: %(install_path)s/imagenet.json
         annotation_conversion:
           converter: imagenet
-          annotation_file: %(annotation_file)s
+          annotation_file: %(install_path)s/val.txt
           labels_file: %(labels_file)s
           has_background: True
         subsample_size: 500
@@ -49,9 +49,6 @@ models:
           - name: accuracy @ top1
             type: accuracy
             top_k: 1
-          - name: accuracy @ top5
-            type: accuracy
-            top_k: 5
 '''
 
 def configure(i):
@@ -59,6 +56,8 @@ def configure(i):
     deps=i['deps']
 
     model_env = deps['model-source']['dict']['env']
+    install_path = i['install_path']
+
     [ mean_r, mean_g, mean_b ] = [ int(float(mean_str)+0.5) for mean_str in model_env['ML_MODEL_GIVEN_CHANNEL_MEANS'].split() ]
  
     aux_env = deps['imagenet-aux']['dict']['env']
@@ -77,7 +76,8 @@ def configure(i):
         "mean_b"          : mean_b,
         "data_source"     : val_env['CK_ENV_DATASET_IMAGENET_VAL'],
         "labels_file"     : aux_env['CK_CAFFE_IMAGENET_SYNSET_WORDS_TXT'],
-        "annotation_file" : aux_env['CK_CAFFE_IMAGENET_VAL_TXT']
+        "annotation_file" : aux_env['CK_CAFFE_IMAGENET_VAL_TXT'],
+        "install_path"    : install_path
     }
 
 ################################################################################
@@ -150,7 +150,15 @@ def setup(i):
     config_file = configure(i)
     ck.out(config_file)
 
-    with open("config.yml", "w") as config_yml:
+    filename=pi + "/config.yml"
+    if not os.path.exists(os.path.dirname(filename)):
+        try:
+            os.makedirs(os.path.dirname(filename))
+        except OSError as exc: # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                raise
+
+    with open(filename, "w") as config_yml:
         config_yml.write(config_file)
-    
+
     return {'return':0}
