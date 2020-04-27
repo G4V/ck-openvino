@@ -36,6 +36,15 @@ export INC_DIR=${INSTALL_DIR}/include
 rm -rf   ${OBJ_DIR} ${LIB_DIR} ${BIN_DIR} ${INC_DIR}
 mkdir -p ${OBJ_DIR} ${LIB_DIR} ${BIN_DIR} ${INC_DIR}
 
+#Python script required to determine the path to the python library
+read -d '' PYTHON_LIB <<END_OF_PYSTR
+from distutils.sysconfig import get_config_var; from os.path import sep; import os.path; \
+pth0 = get_config_var('LIBDIR') + sep + get_config_var('MULTIARCH') + sep + get_config_var('INSTSONAME') ; \
+pth1 = get_config_var('LIBDIR') + sep + get_config_var('INSTSONAME') ; \
+pth = pth0 if os.path.exists(pth0) else pth1 ; \
+print(pth)
+END_OF_PYSTR
+
 # Configure the package.
 read -d '' CMK_CMD <<EO_CMK_CMD
 ${CK_ENV_TOOL_CMAKE_BIN}/cmake \
@@ -61,7 +70,7 @@ ${CK_ENV_TOOL_CMAKE_BIN}/cmake \
   -DENABLE_PYTHON=ON \
   -DPYTHON_EXECUTABLE=${CK_ENV_COMPILER_PYTHON_FILE} \
   -DPYTHON_INCLUDE_DIR=$(${CK_ENV_COMPILER_PYTHON_FILE} -c "from distutils.sysconfig import get_config_var; print('{}'.format(get_config_var('INCLUDEPY')))") \
-  -DPYTHON_LIBRARY=$(${CK_ENV_COMPILER_PYTHON_FILE} -c "from distutils.sysconfig import get_config_var; from os.path import sep; print('{}{}{}{}{}'.format(get_config_var('LIBDIR'), sep, get_config_var('MULTIARCH'), sep, get_config_var('INSTSONAME')))") \
+  -DPYTHON_LIBRARY=$(${CK_ENV_COMPILER_PYTHON_FILE} -c "${PYTHON_LIB}") \
   "${SRC_DIR}"
 EO_CMK_CMD
 
